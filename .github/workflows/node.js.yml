@@ -35,6 +35,11 @@ jobs:
     steps:
       - name: Chekout code
         uses: actions/checkout@v4
+
+      - name: Gitleaks setup
+        uses: actions/gitleaks-actions@v2
+
+        
       - name: Gitleaks scan
         run: |
           gitleaks detect --source ./client --exit-code 1
