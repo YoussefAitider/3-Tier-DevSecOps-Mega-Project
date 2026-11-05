@@ -7,7 +7,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
+  compile:
 
     runs-on: Agent-1
     steps:
@@ -28,7 +28,17 @@ jobs:
         cd api
         find . -name "*.js" -exec node --check {} +
 
-        
+  gitleaks-scan:
+    runs-on: Agent-1
+    needs: compile
+    
+    steps:
+      - name: Chekout code
+        uses: actions/checkout@v4
+      - name: Gitleaks scan
+        run: |
+          gitleaks detect --source ./client --exit-code 1
+          gitleaks detect --source ./api --exit-code 1  
 
 
 
