@@ -36,9 +36,8 @@ jobs:
       - name: Chekout code
         uses: actions/checkout@v4
 
-      - name: Gitleaks setup
-        uses: actions/gitleaks-actions@v2
-
+      - name: Gitleaks Scan
+        uses: gitleaks/gitleaks-action@v2
         
       - name: Gitleaks scan
         run: |
