@@ -1,111 +1,102 @@
-
 name: Node.js CICD
 
 on:
   push:
-    branches: ["main"]
+    branches: [ "main" ]
   pull_request:
-    branches: ["main"]
+    branches: [ "main" ]
 
 jobs:
   compile:
+
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+    - name: Checkout Code
+      uses: actions/checkout@v4
+      
+    - name: Use Node.js 
+      uses: actions/setup-node@v4
+      with:
+        node-version: '23'
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "24"
-
-      - name: Frontend Compilation (Syntax Check)
-        run: |
-          cd client
-          find . -path "*/node_modules" -prune -o \
-            -name "*.js" -exec node --check {} +
-
-      - name: Backend Compilation (Syntax Check)
-        run: |
-          cd api
-          find . -path "*/node_modules" -prune -o \
-            -name "*.js" -exec node --check {} +
+    - name: Frontend Compilation (Syntax check)
+      run: |
+        cd client
+        find . -name "*.js" -exec node --check {} +
+    - name: Backend Compilation (Syntax check)
+      run: |
+        cd api
+        find . -name "*.js" -exec node --check {} +
 
   gitleaks-scan:
     runs-on: ubuntu-latest
     needs: compile
-
+    
     steps:
-      - name: Checkout Code
+      - name: Chekout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Gitleaks Scan
         uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  trivy-fs-scan:
+        
+      - name: Gitleaks scan
+        run: |
+          gitleaks detect --source ./client --exit-code 1
+          gitleaks detect --source ./api --exit-code 1  
+  trivy_fs_scan:
     runs-on: ubuntu-latest
     needs: gitleaks-scan
-
     steps:
-      - name: Checkout Code
+      - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Trivy Vulnerability Scanner
+      - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@v0.36.0
         with:
-          scan-type: fs
-          scan-ref: .
-          format: table
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'table'
           ignore-unfixed: true
-          vuln-type: os,library
-          severity: CRITICAL,HIGH
-          exit-code: "1"
+          vuln-type: 'os,library'
+          security: 'CRITICAL,HIGH'
 
   sonar-frontend:
     runs-on: ubuntu-latest
-    needs: trivy-fs-scan
-
+    needs: trivy_fs_scan
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+     - name: Chekout code
+       uses: actions/checkout@v4
 
-      - name: SonarQube Scan (Client)
-        uses: sonarsource/sonarqube-scan-action@v6
-        with:
+     - name: SonarQube Scan (client)
+       uses: sonarsource/sonarqube-scan-action@master
+       with:
           projectBaseDir: client
           args: >
             -Dsonar.projectName=myorg_client
             -Dsonar.projectKey=myorg_client
             -Dsonar.sources=.
-            -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/build/**
-            -Dsonar.verbose=true
-        env:
+            -Dsonar.tests=tests/
+            -Dsonar.test.exclusions=**/node_modules/**,**/dist/**,**/build/**
+       env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-
+          
   sonar-backend:
     runs-on: ubuntu-latest
-    needs: trivy-fs-scan
-
+    needs: sonar-frontend
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+     - name: Chekout code
+       uses: actions/checkout@v4
 
-      - name: SonarQube Scan (API)
-        uses: sonarsource/sonarqube-scan-action@v6
-        with:
+     - name: SonarQube Scan (api)
+       uses: sonarsource/sonarqube-scan-action@master
+       with:
           projectBaseDir: api
           args: >
             -Dsonar.projectName=myorg_api
             -Dsonar.projectKey=myorg_api
             -Dsonar.sources=.
-            -Dsonar.exclusions=**/node_modules/**,**/dist/**,**/build/**
-            -Dsonar.verbose=true
-        env:
+            -Dsonar.tests=tests/
+            -Dsonar.test.exclusions=**/node_modules/**,**/dist/**,**/build/**
+       env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
