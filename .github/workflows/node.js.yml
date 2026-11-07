@@ -82,7 +82,7 @@ jobs:
           
   sonar-backend:
     runs-on: ubuntu-latest
-    needs: trivy_fs_scan
+    needs: sonar-frontend
     steps:
      - name: Chekout code
        uses: actions/checkout@v4
