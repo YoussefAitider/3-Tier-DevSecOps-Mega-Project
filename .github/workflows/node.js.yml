@@ -74,8 +74,7 @@ jobs:
             -Dsonar.projectName=myorg_client
             -Dsonar.projectKey=myorg_client
             -Dsonar.sources=.
-            -Dsonar.tests=tests/
-            -Dsonar.test.exclusions=**/node_modules/**,**/dist/**,**/build/**
+            
        env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
@@ -95,8 +94,7 @@ jobs:
             -Dsonar.projectName=myorg_api
             -Dsonar.projectKey=myorg_api
             -Dsonar.sources=.
-            -Dsonar.tests=tests/
-            -Dsonar.test.exclusions=**/node_modules/**,**/dist/**,**/build/**
+           
        env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
